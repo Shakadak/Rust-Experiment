@@ -1,0 +1,5 @@
+[package]
+
+name = "Graph"
+version = "0.0.1"
+authors = ["Shakadak <nathanael.pineau@gmail.com>"]
