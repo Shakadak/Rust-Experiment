@@ -35,7 +35,7 @@ mod tree
 
     impl Leaf<uint>
     {
-        pub fn new_leaf<uint>(data: uint) -> Box<Leaf<uint>>
+        pub fn new_leaf<Uint>(data: uint) -> Box<Leaf<uint>>
         {
             box Leaf
             {
@@ -47,7 +47,7 @@ mod tree
 
         //###########################################
 
-        pub fn add_leaf<uint>(&mut self, data: uint)
+        pub fn add_leaf<Uint>(&mut self, data: uint)
         {
             match  data >= self.data
             {
@@ -93,17 +93,11 @@ mod tree
 
         pub fn display_tree(&self)
         {
-            let mut level;
+            let depth = self.count_levels();
 
-            for depth in range(self.count_levels() - 1u, 0u)
+            for level in range(1u, depth + 1)
             {
-                println!("Depth : {}", depth);
-                level = self.get_level(depth);
-                match level
-                {
-                    Some(to_print)  => println!("{}| {}", depth, to_print),
-                    None            => break,
-                }
+                println!("{}| {:^30}", depth - level, self.format_level(depth - level, depth));
             }
         }
 
@@ -135,33 +129,27 @@ mod tree
 
         //###########################################
 
-        fn get_level(&self, depth: uint) -> Option<String>
+        fn format_level(&self, level: uint, depth: uint) -> String
         {
-            if depth == 0
+            if level == 0
             {
-                Some(format!("{}", self.data))
+                format!("{:<2}", self.data)
             }
             else
             {
                 let lesser = match self.lesser
                 {
-                    Some(ref branch)    => branch.get_level(depth - 1),
-                    None                => None,
+                    Some(ref branch)    => branch.format_level(level - 1, depth),
+                    None                => format!("      "),
                 };
 
                 let greater = match self.greater
                 {
-                    Some(ref branch)    => branch.get_level(depth - 1),
-                    None                => None,
+                    Some(ref branch)    => branch.format_level(level - 1, depth),
+                    None                => format!("      "),
                 };
 
-                match (lesser, greater)
-                {
-                    (Some(s1), Some(s2))    => Some(format!("({}|{})", s1, s2)),
-                    (Some(s), None)         => Some(format!("({}|)", s)),
-                    (None, Some(s))         => Some(format!("(|{})", s)),
-                    (None, None)            => None,
-                }
+                format!("{:<2}{}{:<2}", lesser, String::from_char((level) * 2u, ' '), greater)
             }
         }
     }
