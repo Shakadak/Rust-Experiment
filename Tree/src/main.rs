@@ -6,6 +6,7 @@ fn main()
 
     let mut random;
 
+    print!("Elements generated : ");
     for _ in range(1u, 11u)
     {
         random = std::rand::random::<uint>() % 100u;
@@ -14,8 +15,12 @@ fn main()
     }
     std::io::print("\n");
 
+    print!("In-order tree traversal : ");
     root.display_sorted_leaves();
     std::io::print("\n");
+
+    println!("Depth of the tree : {} levels", root.count_levels());
+    root.display_tree();
 }
 
 //#[allow(dead_code)]
@@ -40,7 +45,9 @@ mod tree
             }
         }
 
-        pub fn add_leaf<T>(&mut self, data: uint)
+        //###########################################
+
+        pub fn add_leaf<uint>(&mut self, data: uint)
         {
             match  data >= self.data
             {
@@ -48,26 +55,28 @@ mod tree
                 {
                     match self.greater
                     {
-                        Some(ref mut branch)    => branch.add_leaf::<T>(data),
-                        None                    => self.greater = Some(Leaf::new_leaf::<T>(data)),
+                        Some(ref mut branch)    => branch.add_leaf::<uint>(data),
+                        None                    => self.greater = Some(Leaf::new_leaf::<uint>(data)),
                     }
                 },
                 false   =>
                 {
                     match self.lesser
                     {
-                        Some(ref mut branch)    => branch.add_leaf::<T>(data),
-                        None                    => self.lesser = Some(Leaf::new_leaf::<T>(data)),
+                        Some(ref mut branch)    => branch.add_leaf::<uint>(data),
+                        None                    => self.lesser = Some(Leaf::new_leaf::<uint>(data)),
                     }
                 },
             }
         }
 
-        pub fn display_sorted_leaves(self)
+        //###########################################
+
+        pub fn display_sorted_leaves(&self)
         {
             match self.lesser
             {
-                Some(branch)    => branch.display_sorted_leaves(),
+                Some(ref branch)    => branch.display_sorted_leaves(),
                 None            => (),
             }
 
@@ -75,8 +84,84 @@ mod tree
 
             match self.greater
             {
-                Some(branch)    => branch.display_sorted_leaves(),
+                Some(ref branch)    => branch.display_sorted_leaves(),
                 None            => (),
+            }
+        }
+
+        //###########################################
+
+        pub fn display_tree(&self)
+        {
+            let mut level;
+
+            for depth in range(self.count_levels() - 1u, 0u)
+            {
+                println!("Depth : {}", depth);
+                level = self.get_level(depth);
+                match level
+                {
+                    Some(to_print)  => println!("{}| {}", depth, to_print),
+                    None            => break,
+                }
+            }
+        }
+
+        //###########################################
+
+        pub fn count_levels(&self) -> uint
+        {
+            let lesser = match self.lesser
+            {
+                None                => 1u,
+                Some(ref branch)    => 1u + branch.count_levels(),
+            };
+
+            let greater = match self.greater
+            {
+                None                => 1u,
+                Some(ref branch)    => 1u + branch.count_levels(),
+            };
+
+            if lesser > greater
+            {
+                lesser
+            }
+            else
+            {
+                greater
+            }
+        }
+
+        //###########################################
+
+        fn get_level(&self, depth: uint) -> Option<String>
+        {
+            if depth == 0
+            {
+                Some(format!("{}", self.data))
+            }
+            else
+            {
+                let lesser = match self.lesser
+                {
+                    Some(ref branch)    => branch.get_level(depth - 1),
+                    None                => None,
+                };
+
+                let greater = match self.greater
+                {
+                    Some(ref branch)    => branch.get_level(depth - 1),
+                    None                => None,
+                };
+
+                match (lesser, greater)
+                {
+                    (Some(s1), Some(s2))    => Some(format!("({}|{})", s1, s2)),
+                    (Some(s), None)         => Some(format!("({}|)", s)),
+                    (None, Some(s))         => Some(format!("(|{})", s)),
+                    (None, None)            => None,
+                }
             }
         }
     }
