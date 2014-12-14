@@ -60,6 +60,29 @@ mod tree
                 }
             }
         }
+
+        //#######################################
+
+        pub fn count_levels(&self) -> uint
+        {
+            match *self
+            {
+                Leaf                                                    => 0,
+                Node(ref lesser_branch, _, ref greater_branch)   =>
+                {
+                    let lesser_levels = 1 + lesser_branch.count_levels();
+                    let greater_levels = 1 + greater_branch.count_levels();
+                    if lesser_levels > greater_levels
+                    {
+                        lesser_levels
+                    }
+                    else
+                    {
+                        greater_levels
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -82,7 +105,7 @@ fn main()
 
     print!("Sorted elements : ");
     root.print_in_order();
-    println!("");
+    println!("\nNumber of level : {}", root.count_levels());
 }
 
         //###########################################
