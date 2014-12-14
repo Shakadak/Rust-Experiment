@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 mod tree
 {
     extern crate core;
@@ -20,7 +21,7 @@ mod tree
 
     //###########################################
 
-    impl<T: Ord+core::fmt::Show> Tree<T>
+    impl<T: Ord+core::fmt::Show+Copy> Tree<T>
     {
         pub fn new_tree() -> Tree<T>
         {
@@ -83,6 +84,45 @@ mod tree
                 }
             }
         }
+
+        //#######################################
+
+/*        pub fn format_levels(&self) -> Vec<String>
+       {
+            let number_of_level = self.count_levels();
+            let formated_levels: Vec<String>;
+            formated_levels
+        }*/
+
+        //#######################################
+
+        pub fn get_max(&self) -> Option<T>
+        {
+            match *self
+            {
+                Leaf                                    => None,
+                Node(_, ref data, ref greater_branch)   => match greater_branch.get_max()
+                {
+                    Some(result)    => Some(result),
+                    None            => Some(*data)
+                }
+            }
+        }
+
+        //#######################################
+
+        pub fn get_min(&self) -> Option<T>
+        {
+            match *self
+            {
+                Leaf                                    => None,
+                Node(ref lesser_branch, ref data, _)    => match lesser_branch.get_min()
+                {
+                    Some(result)    => Some(result),
+                    None            => Some(*data)
+                }
+            }
+        }
     }
 }
 
@@ -106,6 +146,18 @@ fn main()
     print!("Sorted elements : ");
     root.print_in_order();
     println!("\nNumber of level : {}", root.count_levels());
+    println!("Max is : {}", match root.get_max()
+             {
+                 Some(value)    => format!("{}", value),
+                 None           => format!("Error, the tree may have never been used.")
+             }
+            );
+    println!("Min is : {}", match root.get_min()
+             {
+                 Some(value)    => format!("{}", value),
+                 None           => format!("Error, the tree may have never been used.")
+             }
+            );
 }
 
         //###########################################
