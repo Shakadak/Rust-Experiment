@@ -1,6 +1,95 @@
+mod tree
+{
+    extern crate core;
+    use self::Tree::
+    {
+        Leaf,
+        Node
+    };
+
+    pub enum Tree<T>
+    {
+        Leaf,
+        Node
+            (
+                Box<Tree<T>>,
+                T,
+                Box<Tree<T>>
+            )
+    }
+
+    //###########################################
+
+    impl<T: Ord+core::fmt::Show> Tree<T>
+    {
+        pub fn new_tree() -> Tree<T>
+        {
+            Leaf
+        }
+
+        //#######################################
+
+        pub fn insert_value(&mut self, unplaced: T)
+        {
+            match *self
+            {
+                Leaf    => *self = Node(box Leaf, unplaced, box Leaf),
+                Node(ref mut lesser_branch, ref data, ref mut greater_branch)   => if unplaced < *data
+                {
+                    lesser_branch.insert_value(unplaced);
+                }
+                else if unplaced > *data
+                {
+                    greater_branch.insert_value(unplaced);
+                }
+            }
+        }
+
+        //#######################################
+
+        pub fn print_in_order(&self)
+        {
+            match *self
+            {
+                Leaf                                                    => return,
+                Node(ref lesser_branch, ref data, ref greater_branch)   =>
+                {
+                    lesser_branch.print_in_order();
+                    print!("{}, ", *data);
+                    greater_branch.print_in_order();
+                }
+            }
+        }
+    }
+}
+
+        //###########################################
+
+fn main()
+{
+    let mut root: tree::Tree<uint> = tree::Tree::new_tree();
+
+    let mut random;
+
+    print!("Elements generated : ");
+    for _ in range(1u, 11u)
+    {
+        random = std::rand::random::<uint>() % 100u;
+        print!("{}, ", random);
+        root.insert_value(random);
+    }
+    std::io::print("\n");
+
+    print!("Sorted elements : ");
+    root.print_in_order();
+    println!("");
+}
+
+        //###########################################
+
 //#[test]
 //fn it_works()
-fn main()
+/*fn main()
 {
     let mut root = tree::Leaf::new_leaf::<uint>(50u);
 
@@ -26,11 +115,14 @@ fn main()
 //#[allow(dead_code)]
 mod tree
 {
-    pub struct Leaf<T>
+    pub enum Leaf<T>
     {
-        pub greater:    Option<Box<Leaf<T>>>,
-        pub lesser:     Option<Box<Leaf<T>>>,
-        pub data:       T,
+        Node (
+            greater:    Box<Leaf<T>>>,
+            lesser:     Option<Box<Leaf<T>>>,
+            data:       T,
+            ),
+            None,
     }
 
     impl Leaf<uint>
@@ -153,4 +245,4 @@ mod tree
             }
         }
     }
-}
+}*/
