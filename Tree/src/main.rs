@@ -1,4 +1,5 @@
 #![allow(dead_code)]
+#![feature(unboxed_closures)]
 mod tree
 {
     extern crate core;
@@ -23,7 +24,7 @@ mod tree
 
     impl<T: Ord+core::fmt::Show+Copy> Tree<T>
     {
-        pub fn new_tree() -> Tree<T>
+        pub fn new() -> Tree<T>
         {
             Leaf
         }
@@ -34,7 +35,7 @@ mod tree
         {
             match *self
             {
-                Leaf    => *self = Node(box Leaf, unplaced, box Leaf),
+                Leaf                                    => *self = Node(box Leaf, unplaced, box Leaf),
                 Node(ref mut lesser_branch, ref data, ref mut greater_branch)   => if unplaced < *data
                 {
                     lesser_branch.insert_value(unplaced);
@@ -56,7 +57,7 @@ mod tree
                 Node(ref lesser_branch, ref data, ref greater_branch)   =>
                 {
                     lesser_branch.print_in_order();
-                    print!("{}, ", *data);
+                    print!(" {},", *data);
                     greater_branch.print_in_order();
                 }
             }
@@ -68,8 +69,8 @@ mod tree
         {
             match *self
             {
-                Leaf                                                    => 0,
-                Node(ref lesser_branch, _, ref greater_branch)   =>
+                Leaf                                            => 0,
+                Node(ref lesser_branch, _, ref greater_branch)  =>
                 {
                     let lesser_levels = 1 + lesser_branch.count_levels();
                     let greater_levels = 1 + greater_branch.count_levels();
@@ -87,12 +88,103 @@ mod tree
 
         //#######################################
 
-/*        pub fn format_levels(&self) -> Vec<String>
-       {
-            let number_of_level = self.count_levels();
-            let formated_levels: Vec<String>;
-            formated_levels
-        }*/
+        pub fn format_levels(&self)
+        {
+            let max_level = self.count_levels();
+
+            let size_of_element = self.estimated_size_of_printed_element();
+
+            let size_of_level = ((1u << max_level) - 1u) * size_of_element;
+            
+            let lessermost_margin = (1 << (max_level - self.lessermost()) ) - 1u;
+
+            let mut formatted_levels: Vec<String> =
+                Vec::from_elem
+                (
+                    max_level, 
+                    String::with_capacity(size_of_level)
+                );
+            self.fill_formatted_levels(1,
+                                      max_level,
+                                      lessermost_margin,
+                                      size_of_element,
+                                      &mut formatted_levels,
+                                      1);
+
+            let separator = String::from_char(size_of_level, '-');
+            for level in formatted_levels.iter()
+            {
+                println!("{}", level);
+                println!("{}", separator);
+            }
+        }
+
+        //#######################################
+
+        fn lessermost(&self) -> uint
+        {
+            match *self
+            {
+                Leaf                => 0,
+                Node(ref l, _, _)   => 1 + l.lessermost()
+            }
+        }
+
+        //#######################################
+
+        fn estimated_size_of_printed_element(&self) -> uint
+        {
+            (
+                format!("{}",
+                        self
+                        .get_max()
+                        .unwrap())
+            ).len()
+        }
+
+        //#######################################
+
+        fn fill_formatted_levels(&self,
+                                current_level:      uint,
+                                max_level:          uint,
+                                lessermost:         uint,
+                                size_of_element:    uint,
+                                vector:             &mut Vec<String>,
+                                position_in_level:  uint)
+        {
+            match *self
+            {
+                Leaf                                                    =>  return,
+                Node(ref lesser_branch, ref data, ref greater_branch)   =>
+                {
+                    lesser_branch.fill_formatted_levels(current_level + 1,
+                                                       max_level,
+                                                       lessermost,
+                                                       size_of_element,
+                                                       vector,
+                                                       position_in_level * 2 - 1);
+                    {
+                        let ref mut formatted_level = vector.as_mut_slice()[current_level - 1];
+
+                        let len = formatted_level.len();
+                        let margin = (1 << (max_level - current_level) ) - 1;
+                        let inbetween_space = (margin << 1) + 2;
+                        let to_current_node = inbetween_space * (position_in_level - 1);
+                        let how_much_to_fill = (margin + to_current_node - lessermost) * size_of_element - len;
+
+                        formatted_level.grow(how_much_to_fill, ' ');
+                        formatted_level.push_str((format!("{}", *data)).as_slice());
+                    }
+
+                    greater_branch.fill_formatted_levels(current_level + 1,
+                                                        max_level,
+                                                        lessermost,
+                                                        size_of_element,
+                                                        vector,
+                                                        position_in_level * 2);
+                }
+            }
+        }
 
         //#######################################
 
@@ -130,20 +222,20 @@ mod tree
 
 fn main()
 {
-    let mut root: tree::Tree<uint> = tree::Tree::new_tree();
+    let mut root: tree::Tree<uint> = tree::Tree::new();
 
     let mut random;
 
-    print!("Elements generated : ");
-    for _ in range(1u, 11u)
+    print!("Elements generated :");
+    for _ in range(1u, 16u)
     {
         random = std::rand::random::<uint>() % 100u;
-        print!("{}, ", random);
+        print!(" {},", random);
         root.insert_value(random);
     }
     std::io::print("\n");
 
-    print!("Sorted elements : ");
+    print!("Sorted elements :");
     root.print_in_order();
     println!("\nNumber of level : {}", root.count_levels());
     println!("Max is : {}", match root.get_max()
@@ -158,166 +250,5 @@ fn main()
                  None           => format!("Error, the tree may have never been used.")
              }
             );
+    root.format_levels();
 }
-
-        //###########################################
-
-//#[test]
-//fn it_works()
-/*fn main()
-{
-    let mut root = tree::Leaf::new_leaf::<uint>(50u);
-
-    let mut random;
-
-    print!("Elements generated : ");
-    for _ in range(1u, 11u)
-    {
-        random = std::rand::random::<uint>() % 100u;
-        print!("{}, ", random);
-        root.add_leaf::<uint>(random);
-    }
-    std::io::print("\n");
-
-    print!("In-order tree traversal : ");
-    root.display_sorted_leaves();
-    std::io::print("\n");
-
-    println!("Depth of the tree : {} levels", root.count_levels());
-    root.display_tree();
-}
-
-//#[allow(dead_code)]
-mod tree
-{
-    pub enum Leaf<T>
-    {
-        Node (
-            greater:    Box<Leaf<T>>>,
-            lesser:     Option<Box<Leaf<T>>>,
-            data:       T,
-            ),
-            None,
-    }
-
-    impl Leaf<uint>
-    {
-        pub fn new_leaf<Uint>(data: uint) -> Box<Leaf<uint>>
-        {
-            box Leaf
-            {
-                greater:    None,
-                lesser:     None,
-                data:       data
-            }
-        }
-
-        //###########################################
-
-        pub fn add_leaf<Uint>(&mut self, data: uint)
-        {
-            match  data >= self.data
-            {
-                true    =>
-                {
-                    match self.greater
-                    {
-                        Some(ref mut branch)    => branch.add_leaf::<uint>(data),
-                        None                    => self.greater = Some(Leaf::new_leaf::<uint>(data)),
-                    }
-                },
-                false   =>
-                {
-                    match self.lesser
-                    {
-                        Some(ref mut branch)    => branch.add_leaf::<uint>(data),
-                        None                    => self.lesser = Some(Leaf::new_leaf::<uint>(data)),
-                    }
-                },
-            }
-        }
-
-        //###########################################
-
-        pub fn display_sorted_leaves(&self)
-        {
-            match self.lesser
-            {
-                Some(ref branch)    => branch.display_sorted_leaves(),
-                None            => (),
-            }
-
-            print!("{}, ", self.data);
-
-            match self.greater
-            {
-                Some(ref branch)    => branch.display_sorted_leaves(),
-                None            => (),
-            }
-        }
-
-        //###########################################
-
-        pub fn display_tree(&self)
-        {
-            let depth = self.count_levels();
-
-            for level in range(1u, depth + 1)
-            {
-                println!("{}| {:^30}", depth - level, self.format_level(depth - level, depth));
-            }
-        }
-
-        //###########################################
-
-        pub fn count_levels(&self) -> uint
-        {
-            let lesser = match self.lesser
-            {
-                None                => 1u,
-                Some(ref branch)    => 1u + branch.count_levels(),
-            };
-
-            let greater = match self.greater
-            {
-                None                => 1u,
-                Some(ref branch)    => 1u + branch.count_levels(),
-            };
-
-            if lesser > greater
-            {
-                lesser
-            }
-            else
-            {
-                greater
-            }
-        }
-
-        //###########################################
-
-        fn format_level(&self, level: uint, depth: uint) -> String
-        {
-            if level == 0
-            {
-                format!("{:<2}", self.data)
-            }
-            else
-            {
-                let lesser = match self.lesser
-                {
-                    Some(ref branch)    => branch.format_level(level - 1, depth),
-                    None                => format!("      "),
-                };
-
-                let greater = match self.greater
-                {
-                    Some(ref branch)    => branch.format_level(level - 1, depth),
-                    None                => format!("      "),
-                };
-
-                format!("{:<2}{}{:<2}", lesser, String::from_char((level) * 2u, ' '), greater)
-            }
-        }
-    }
-}*/
