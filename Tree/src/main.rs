@@ -96,7 +96,10 @@ mod tree
 
             let size_of_level = ((1u << max_level) - 1u) * size_of_element;
             
+            let greatermost_margin = (1 << (max_level - self.greatermost()) ) - 1u;
+            
             let lessermost_margin = (1 << (max_level - self.lessermost()) ) - 1u;
+            println!("Lessermost margin : {}. Greatermost_margin : {}.", lessermost_margin, greatermost_margin);
 
             let mut formatted_levels: Vec<String> =
                 Vec::from_elem
@@ -111,11 +114,22 @@ mod tree
                                       &mut formatted_levels,
                                       1);
 
-            let separator = String::from_char(size_of_level, '-');
+            let separator = String::from_char(size_of_level - (lessermost_margin + greatermost_margin) * size_of_element, '-');
             for level in formatted_levels.iter()
             {
                 println!("{}", level);
                 println!("{}", separator);
+            }
+        }
+
+        //#######################################
+
+        fn greatermost(&self) -> uint
+        {
+            match *self
+            {
+                Leaf                => 0,
+                Node(_, _, ref g)   => 1 + g.greatermost()
             }
         }
 
