@@ -3,6 +3,8 @@
 mod tree
 {
     extern crate core;
+    use std::vec::Vec::*;
+    use std::string::String::*;
     use self::Tree::
     {
         Leaf,
@@ -35,7 +37,7 @@ mod tree
         {
             match *self
             {
-                Leaf                                    => *self = Node(box Leaf, unplaced, box Leaf),
+                Leaf                                    => *self = Node(Box::new(Leaf), unplaced, Box::new(Leaf)),
                 Node(ref mut lesser_branch, ref data, ref mut greater_branch)   => if unplaced < *data
                 {
                     lesser_branch.insert_value(unplaced);
@@ -65,7 +67,7 @@ mod tree
 
         //#######################################
 
-        pub fn count_levels(&self) -> uint
+        pub fn count_levels(&self) -> u32
         {
             match *self
             {
@@ -94,17 +96,17 @@ mod tree
 
             let size_of_element = self.estimated_size_of_printed_element();
 
-            let size_of_level = ((1u << max_level) - 1u) * size_of_element;
-            
-            let greatermost_margin = (1 << (max_level - self.greatermost()) ) - 1u;
-            
-            let lessermost_margin = (1 << (max_level - self.lessermost()) ) - 1u;
+            let size_of_level = ((1u32 << max_level) - 1u32) * size_of_element;
+
+            let greatermost_margin = (1 << (max_level - self.greatermost()) ) - 1u32;
+
+            let lessermost_margin = (1 << (max_level - self.lessermost()) ) - 1u32;
             println!("Lessermost margin : {}. Greatermost_margin : {}.", lessermost_margin, greatermost_margin);
 
             let mut formatted_levels: Vec<String> =
                 Vec::from_elem
                 (
-                    max_level, 
+                    max_level,
                     String::with_capacity(size_of_level)
                 );
             self.fill_formatted_levels(1,
@@ -124,7 +126,7 @@ mod tree
 
         //#######################################
 
-        fn greatermost(&self) -> uint
+        fn greatermost(&self) -> u32
         {
             match *self
             {
@@ -135,7 +137,7 @@ mod tree
 
         //#######################################
 
-        fn lessermost(&self) -> uint
+        fn lessermost(&self) -> u32
         {
             match *self
             {
@@ -146,7 +148,7 @@ mod tree
 
         //#######################################
 
-        fn estimated_size_of_printed_element(&self) -> uint
+        fn estimated_size_of_printed_element(&self) -> u32
         {
             (
                 format!("{}",
@@ -159,12 +161,12 @@ mod tree
         //#######################################
 
         fn fill_formatted_levels(&self,
-                                current_level:      uint,
-                                max_level:          uint,
-                                lessermost:         uint,
-                                size_of_element:    uint,
+                                current_level:      u32,
+                                max_level:          u32,
+                                lessermost:         u32,
+                                size_of_element:    u32,
                                 vector:             &mut Vec<String>,
-                                position_in_level:  uint)
+                                position_in_level:  u32)
         {
             match *self
             {
@@ -236,14 +238,14 @@ mod tree
 
 fn main()
 {
-    let mut root: tree::Tree<uint> = tree::Tree::new();
+    let mut root: tree::Tree<u32> = tree::Tree::new();
 
     let mut random;
 
     print!("Elements generated :");
-    for _ in range(1u, 16u)
+    for _ in range(1u32, 16u32)
     {
-        random = std::rand::random::<uint>() % 100u;
+        random = std::rand::random::<u32>() % 100u32;
         print!(" {},", random);
         root.insert_value(random);
     }
